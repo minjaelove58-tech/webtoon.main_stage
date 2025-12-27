@@ -1,0 +1,424 @@
+# webtoon.main_stage
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Webtoon</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#121a33; --panel2:#0f1630;
+      --text:#eaf0ff; --muted:#a9b5d6;
+      --accent:#6ee7ff; --accent2:#a78bfa;
+      --line:rgba(255,255,255,.10);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 600px at 10% -10%, rgba(110,231,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 90% 0%, rgba(167,139,250,.18), transparent 60%),
+        linear-gradient(180deg, #070a14, var(--bg));
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none}
+    .wrap{max-width:1120px; margin:0 auto; padding:18px 16px 40px}
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: blur(10px);
+      background: rgba(7,10,20,.72);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{
+      max-width:1120px; margin:0 auto;
+      display:flex; gap:12px; align-items:center;
+      padding:12px 16px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; font-weight:800;
+      letter-spacing:.2px;
+    }
+    .logo{
+      width:34px; height:34px; border-radius:12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 10px 30px rgba(110,231,255,.18);
+    }
+    .search{
+      flex:1;
+      display:flex; align-items:center; gap:10px;
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 12px;
+    }
+    .search input{
+      width:100%; border:0; outline:0; background:transparent; color:var(--text);
+      font-size:14px;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:999px;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn:hover{border-color:rgba(255,255,255,.22)}
+    .tabs{
+      display:flex; gap:8px; align-items:center;
+      margin-left:auto;
+    }
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap:16px;
+      margin-top:18px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+      .topbar-inner{flex-wrap:wrap}
+      .tabs{width:100%; justify-content:flex-end; margin-left:0}
+    }
+
+    /* Panels */
+    .panel{
+      background: rgba(18,26,51,.72);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 50px rgba(0,0,0,.28);
+      overflow:hidden;
+    }
+    .panel-header{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .panel-title{font-weight:800}
+    .panel-sub{color:var(--muted); font-size:13px}
+
+    /* Webtoon cards */
+    .cards{
+      padding:14px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 900px){
+      .cards{grid-template-columns: repeat(2, 1fr)}
+    }
+    @media (max-width: 520px){
+      .cards{grid-template-columns: 1fr}
+    }
+    .card{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      overflow:hidden;
+      transition:.18s transform, .18s border-color;
+    }
+    .card:hover{transform: translateY(-2px); border-color:rgba(255,255,255,.22)}
+    .thumb{
+      height:140px;
+      background:
+        linear-gradient(135deg, rgba(110,231,255,.16), rgba(167,139,250,.16)),
+        radial-gradient(400px 200px at 30% 0%, rgba(255,255,255,.12), transparent 60%);
+      display:flex; align-items:flex-end;
+      padding:12px;
+    }
+    .badge{
+      font-size:12px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.18);
+      padding:6px 9px;
+      border-radius:999px;
+    }
+    .card-body{padding:12px}
+    .card-title{font-weight:800; margin:0 0 4px}
+    .card-meta{margin:0; color:var(--muted); font-size:13px}
+    .card-actions{
+      margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .chip{
+      font-size:12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      padding:6px 9px;
+      border-radius:999px;
+      color:var(--muted);
+    }
+
+    /* Sidebar */
+    .side-list{padding:10px 12px}
+    .side-item{
+      display:flex; gap:10px; align-items:center;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid transparent;
+    }
+    .side-item:hover{
+      background: rgba(255,255,255,.05);
+      border-color: rgba(255,255,255,.10);
+    }
+    .side-dot{
+      width:10px; height:10px; border-radius:999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 8px 18px rgba(110,231,255,.15);
+    }
+    .side-text strong{display:block; font-size:14px}
+    .side-text span{display:block; font-size:12px; color:var(--muted); margin-top:2px}
+
+    /* Viewer */
+    .viewer{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .viewer-top{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:14px;
+      border-bottom:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+    }
+    .viewer-top h2{margin:0; font-size:18px}
+    .viewer-top p{margin:6px 0 0; color:var(--muted); font-size:13px}
+    .viewer-actions{display:flex; gap:8px; flex-wrap:wrap}
+    .viewer-images{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .episode-img{
+      height:260px;
+      border-radius: 16px;
+      border:1px dashed rgba(255,255,255,.18);
+      background:
+        radial-gradient(600px 240px at 40% 0%, rgba(255,255,255,.09), transparent 55%),
+        rgba(255,255,255,.03);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-size:13px;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      opacity:.85;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#">
+        <div class="logo" aria-hidden="true"></div>
+        <div>Mini Webtoon</div>
+      </a>
+
+      <div class="search" role="search">
+        <span aria-hidden="true">🔎</span>
+        <input placeholder="작품 검색 (예: 판타지, 학원, 액션…)" />
+      </div>
+
+      <div class="tabs">
+        <button class="btn" type="button">홈</button>
+        <button class="btn" type="button">장르</button>
+        <button class="btn" type="button">랭킹</button>
+        <button class="btn" type="button">로그인</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- Left: 작품 목록 -->
+      <section class="panel" aria-label="작품 목록">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">오늘의 웹툰</div>
+            <div class="panel-sub">기본 UI 틀(목록/카드)만 구성</div>
+          </div>
+          <button class="btn" type="button">전체보기</button>
+        </div>
+
+        <div class="cards">
+          <!-- 카드 1 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">NEW</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 1</p>
+              <p class="card-meta">작가명 · 판타지</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.9</span>
+                <span class="chip">구독 12.3k</span>
+                <span class="chip">업데이트: 금</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- 카드 2 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">UP</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 2</p>
+              <p class="card-meta">작가명 · 로맨스</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.7</span>
+                <span class="chip">구독 4.1k</span>
+                <span class="chip">업데이트: 화</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- 카드 3 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">HOT</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 3</p>
+              <p class="card-meta">작가명 · 액션</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.5</span>
+                <span class="chip">구독 30.8k</span>
+                <span class="chip">업데이트: 일</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- 카드 4 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">추천</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 4</p>
+              <p class="card-meta">작가명 · 코미디</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.4</span>
+                <span class="chip">구독 1.2k</span>
+                <span class="chip">업데이트: 목</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- 카드 5 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">기본</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 5</p>
+              <p class="card-meta">작가명 · 스릴러</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.2</span>
+                <span class="chip">구독 980</span>
+                <span class="chip">업데이트: 수</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- 카드 6 -->
+          <a class="card" href="#viewer">
+            <div class="thumb"><span class="badge">완결</span></div>
+            <div class="card-body">
+              <p class="card-title">작품 제목 6</p>
+              <p class="card-meta">작가명 · 드라마</p>
+              <div class="card-actions">
+                <span class="chip">★ 9.0</span>
+                <span class="chip">구독 2.3k</span>
+                <span class="chip">업데이트: 토</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Right: 사이드바 -->
+      <aside class="panel" aria-label="랭킹/추천">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">주간 랭킹</div>
+            <div class="panel-sub">사이드바 리스트 틀</div>
+          </div>
+          <button class="btn" type="button">더보기</button>
+        </div>
+
+        <div class="side-list">
+          <a class="side-item" href="#viewer">
+            <div class="side-dot"></div>
+            <div class="side-text">
+              <strong>#1 작품 제목</strong>
+              <span>★ 9.9 · 판타지</span>
+            </div>
+          </a>
+          <a class="side-item" href="#viewer">
+            <div class="side-dot"></div>
+            <div class="side-text">
+              <strong>#2 작품 제목</strong>
+              <span>★ 9.8 · 액션</span>
+            </div>
+          </a>
+          <a class="side-item" href="#viewer">
+            <div class="side-dot"></div>
+            <div class="side-text">
+              <strong>#3 작품 제목</strong>
+              <span>★ 9.7 · 로맨스</span>
+            </div>
+          </a>
+          <a class="side-item" href="#viewer">
+            <div class="side-dot"></div>
+            <div class="side-text">
+              <strong>#4 작품 제목</strong>
+              <span>★ 9.6 · 스릴러</span>
+            </div>
+          </a>
+          <a class="side-item" href="#viewer">
+            <div class="side-dot"></div>
+            <div class="side-text">
+              <strong>#5 작품 제목</strong>
+              <span>★ 9.5 · 드라마</span>
+            </div>
+          </a>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Viewer (회차 보기 화면 틀) -->
+    <section id="viewer" class="panel" style="margin-top:16px;">
+      <div class="viewer-top">
+        <div>
+          <h2>작품 제목 1 · 1화</h2>
+          <p>여기는 웹툰 “뷰어” 기본 틀. (실제 이미지는 아래 박스 자리에 넣으면 됨)</p>
+        </div>
+        <div class="viewer-actions">
+          <button class="btn" type="button">← 이전화</button>
+          <button class="btn" type="button">다음화 →</button>
+          <button class="btn" type="button">❤ 좋아요</button>
+          <button class="btn" type="button">🔔 구독</button>
+        </div>
+      </div>
+
+      <div class="viewer-images">
+        <div class="episode-img">이미지 #1 자리 (예: &lt;img src="..." /&gt;)</div>
+        <div class="episode-img">이미지 #2 자리</div>
+        <div class="episode-img">이미지 #3 자리</div>
+        <div class="episode-img">이미지 #4 자리</div>
+      </div>
+    </section>
+
+    <footer>
+      © Mini Webtoon — 기본 HTML/CSS 틀 (백엔드/DB 없음)
+    </footer>
+  </main>
+</body>
+</html>
